@@ -1207,3 +1207,146 @@ void lmpopCommand(client *c) {
 void blmpopCommand(client *c) {
     lmpopGenericCommand(c, 2, 1);
 }
+
+/* LCOUNT <key> <element> */
+void lcountCommand(client *c) {
+    long count = 0;
+    robj *o;
+    
+    if ((o = lookupKeyReadOrReply(c,c->argv[1],shared.czero)) == NULL ||
+        checkType(c,o,OBJ_LIST)) return;
+
+    listTypeIterator *iter = listTypeInitIterator(o,0,LIST_TAIL);
+    listTypeEntry entry;
+
+    while (listTypeNext(iter,&entry)) {
+        if (listTypeEqual(&entry,c->argv[2])) {
+            count++;
+        }
+    }
+    listTypeReleaseIterator(iter);
+    addReplyLongLong(c,count);
+}
+
+
+/* LMAX <key> */
+void lmaxCommand(client *c) {
+    robj *o;
+    if ((o = lookupKeyReadOrReply(c,c->argv[1],shared.null[c->resp])) == NULL ||
+        checkType(c,o,OBJ_LIST)) return;
+
+    if (listTypeLength(o) == 0) {
+        addReplyNull(c);
+        return;
+    }
+
+    listTypeIterator *iter = listTypeInitIterator(o,0,LIST_TAIL);
+    listTypeEntry entry;
+    robj *max_obj = NULL;
+    double max_num = 0;
+    int is_numeric = 1;
+
+    while (listTypeNext(iter,&entry)) {
+        robj *valObj = listTypeGet(&entry);
+        if (!valObj) continue;
+        
+        double num;
+        if (is_numeric && getDoubleFromObject(valObj, &num) == C_OK) {
+            if (!max_obj || num > max_num) {
+                if (max_obj) decrRefCount(max_obj);
+                max_obj = valObj;
+                max_num = num;
+            } else {
+                decrRefCount(valObj);
+            }
+        } else {
+            /* Switch to string comparison mode */
+            is_numeric = 0;
+            robj *decoded = getDecodedObject(valObj);
+            
+            if (!max_obj) {
+                max_obj = decoded;
+            } else {
+                robj *max_decoded = getDecodedObject(max_obj);
+                int cmp = sdscmp(decoded->ptr, max_decoded->ptr);
+                if (cmp > 0) {
+                    decrRefCount(max_obj);
+                    max_obj = decoded;
+                } else {
+                    decrRefCount(decoded);
+                }
+                if (max_decoded != max_obj) decrRefCount(max_decoded);
+            }
+            if (decoded != valObj) decrRefCount(valObj);
+        }
+    }
+    listTypeReleaseIterator(iter);
+
+    if (max_obj) {
+        addReplyBulk(c, max_obj);
+        decrRefCount(max_obj);
+    } else {
+        addReplyNull(c);
+    }
+}
+
+/* LMIN <key> */
+void lminCommand(client *c) {
+    robj *o;
+    if ((o = lookupKeyReadOrReply(c,c->argv[1],shared.null[c->resp])) == NULL ||
+        checkType(c,o,OBJ_LIST)) return;
+
+    if (listTypeLength(o) == 0) {
+        addReplyNull(c);
+        return;
+    }
+
+    listTypeIterator *iter = listTypeInitIterator(o,0,LIST_TAIL);
+    listTypeEntry entry;
+    robj *min_obj = NULL;
+    double min_num = 0;
+    int is_numeric = 1;
+
+    while (listTypeNext(iter,&entry)) {
+        robj *valObj = listTypeGet(&entry);
+        if (!valObj) continue;
+        
+        double num;
+        if (is_numeric && getDoubleFromObject(valObj, &num) == C_OK) {
+            if (!min_obj || num < min_num) {
+                if (min_obj) decrRefCount(min_obj);
+                min_obj = valObj;
+                min_num = num;
+            } else {
+                decrRefCount(valObj);
+            }
+        } else {
+            /* Switch to string comparison mode */
+            is_numeric = 0;
+            robj *decoded = getDecodedObject(valObj);
+            
+            if (!min_obj) {
+                min_obj = decoded;
+            } else {
+                robj *min_decoded = getDecodedObject(min_obj);
+                int cmp = sdscmp(decoded->ptr, min_decoded->ptr);
+                if (cmp < 0) {
+                    decrRefCount(min_obj);
+                    min_obj = decoded;
+                } else {
+                    decrRefCount(decoded);
+                }
+                if (min_decoded != min_obj) decrRefCount(min_decoded);
+            }
+            if (decoded != valObj) decrRefCount(valObj);
+        }
+    }
+    listTypeReleaseIterator(iter);
+
+    if (min_obj) {
+        addReplyBulk(c, min_obj);
+        decrRefCount(min_obj);
+    } else {
+        addReplyNull(c);
+    }
+}

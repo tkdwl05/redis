@@ -3603,3 +3603,6 @@ int iAmMaster(void);
 #define STRINGIFY(x) STRINGIFY_(x)
 
 #endif
+void lcountCommand(client *c);
+void lmaxCommand(client *c);
+void lminCommand(client *c);

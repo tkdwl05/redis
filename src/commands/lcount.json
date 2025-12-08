@@ -1,0 +1,52 @@
+{
+    "LCOUNT": {
+        "summary": "Returns the number of occurrences of an element in a list.",
+        "complexity": "O(N)",
+        "group": "list",
+        "since": "8.0.0",
+        "arity": 3,
+        "function": "lcountCommand",
+        "command_flags": [
+            "READONLY"
+        ],
+        "acl_categories": [
+            "LIST"
+        ],
+        "key_specs": [
+            {
+                "flags": [
+                    "RO",
+                    "ACCESS"
+                ],
+                "begin_search": {
+                    "index": {
+                        "pos": 1
+                    }
+                },
+                "find_keys": {
+                    "range": {
+                        "lastkey": 0,
+                        "step": 1,
+                        "limit": 0
+                    }
+                }
+            }
+        ],
+        "reply_schema": {
+            "description": "Number of occurrences.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "arguments": [
+            {
+                "name": "key",
+                "type": "key",
+                "key_spec_index": 0
+            },
+            {
+                "name": "element",
+                "type": "string"
+            }
+        ]
+    }
+}

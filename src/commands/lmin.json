@@ -1,0 +1,55 @@
+{
+    "LMIN": {
+        "summary": "Returns the minimum element in a list.",
+        "complexity": "O(N)",
+        "group": "list",
+        "since": "8.0.0",
+        "arity": 2,
+        "function": "lminCommand",
+        "command_flags": [
+            "READONLY"
+        ],
+        "acl_categories": [
+            "LIST"
+        ],
+        "key_specs": [
+            {
+                "flags": [
+                    "RO",
+                    "ACCESS"
+                ],
+                "begin_search": {
+                    "index": {
+                        "pos": 1
+                    }
+                },
+                "find_keys": {
+                    "range": {
+                        "lastkey": 0,
+                        "step": 1,
+                        "limit": 0
+                    }
+                }
+            }
+        ],
+        "reply_schema": {
+            "anyOf": [
+                {
+                    "description": "The minimum element as a string or integer",
+                    "type": "string"
+                },
+                {
+                    "description": "If the list is empty",
+                    "type": "null"
+                }
+            ]
+        },
+        "arguments": [
+            {
+                "name": "key",
+                "type": "key",
+                "key_spec_index": 0
+            }
+        ]
+    }
+}
