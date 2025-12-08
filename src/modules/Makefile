@@ -1,69 +1,57 @@
+# Makefile for Redis Modules
+# Builds: cachelock.so, taskqueue.so, distlock.so
 
-# find the OS
+# Detect OS
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
-# Compile flags for linux / osx
+# Compiler settings
+CC=gcc
+LD=ld
+
+# Compile flags for Linux / macOS
 ifeq ($(uname_S),Linux)
-	SHOBJ_CFLAGS ?= -W -Wall -fno-common -g -ggdb -std=c99 -O2
-	SHOBJ_LDFLAGS ?= -shared
+	SHOBJ_CFLAGS = -W -Wall -fno-common -g -ggdb -std=c99 -O2 -fPIC
+	SHOBJ_LDFLAGS = -shared
 else
-	SHOBJ_CFLAGS ?= -W -Wall -dynamic -fno-common -g -ggdb -std=c99 -O2
-	SHOBJ_LDFLAGS ?= -bundle -undefined dynamic_lookup
+	SHOBJ_CFLAGS = -W -Wall -dynamic -fno-common -g -ggdb -std=c99 -O2
+	SHOBJ_LDFLAGS = -bundle -undefined dynamic_lookup
 endif
 
-# OS X 11.x doesn't have /usr/lib/libSystem.dylib and needs an explicit setting.
-ifeq ($(uname_S),Darwin)
-ifeq ("$(wildcard /usr/lib/libSystem.dylib)","")
-LIBS = -L /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib -lsystem
-endif
-endif
+# Module targets
+all: cachelock.so taskqueue.so distlock.so
 
-.SUFFIXES: .c .so .xo .o
+# Cache Lock Module
+cachelock.so: cachelock.o
+	$(LD) -o $@ $< $(SHOBJ_LDFLAGS) -lc
 
-all: helloworld.so hellotype.so helloblock.so hellocluster.so hellotimer.so hellodict.so hellohook.so helloacl.so
+cachelock.o: cachelock.c ../redismodule.h
+	$(CC) -I. $(SHOBJ_CFLAGS) -c cachelock.c -o cachelock.o
 
-.c.xo:
-	$(CC) -I. $(CFLAGS) $(SHOBJ_CFLAGS) -fPIC -c $< -o $@
+# Task Queue Module
+taskqueue.so: taskqueue.o
+	$(LD) -o $@ $< $(SHOBJ_LDFLAGS) -lc
 
-helloworld.xo: ../redismodule.h
+taskqueue.o: taskqueue.c ../redismodule.h
+	$(CC) -I. $(SHOBJ_CFLAGS) -c taskqueue.c -o taskqueue.o
 
-helloworld.so: helloworld.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lc
+# Distributed Lock Module
+distlock.so: distlock.o
+	$(LD) -o $@ $< $(SHOBJ_LDFLAGS) -lc
 
-hellotype.xo: ../redismodule.h
+distlock.o: distlock.c ../redismodule.h
+	$(CC) -I. $(SHOBJ_CFLAGS) -c distlock.c -o distlock.o
 
-hellotype.so: hellotype.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lc
-
-helloblock.xo: ../redismodule.h
-
-helloblock.so: helloblock.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lpthread -lc
-
-hellocluster.xo: ../redismodule.h
-
-hellocluster.so: hellocluster.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lc
-
-hellotimer.xo: ../redismodule.h
-
-hellotimer.so: hellotimer.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lc
-
-hellodict.xo: ../redismodule.h
-
-hellodict.so: hellodict.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lc
-
-hellohook.xo: ../redismodule.h
-
-hellohook.so: hellohook.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lc
-
-helloacl.xo: ../redismodule.h
-
-helloacl.so: helloacl.xo
-	$(LD) -o $@ $^ $(SHOBJ_LDFLAGS) $(LIBS) -lc
-
+# Clean
 clean:
-	rm -rf *.xo *.so
+	rm -f *.o *.so
+
+# Test
+test: all
+	@echo "Modules built successfully!"
+	@echo ""
+	@echo "To load in Redis:"
+	@echo "  redis-server --loadmodule ./cachelock.so \\"
+	@echo "               --loadmodule ./taskqueue.so \\"
+	@echo "               --loadmodule ./distlock.so"
+
+.PHONY: all clean test
