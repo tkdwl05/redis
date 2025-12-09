@@ -3795,6 +3795,12 @@ int processCommand(client *c) {
         return C_OK;
     }
 
+    /* Check rate limiting before executing command */
+    if (!clientRateLimitCheck(c, c->cmd->fullname)) {
+        rejectCommandFormat(c, "Rate limit exceeded. Too many requests.");
+        return C_OK;
+    }
+
     /* If cluster is enabled perform the cluster redirection here.
      * However we don't perform the redirection if:
      * 1) The sender of this command is our master.
