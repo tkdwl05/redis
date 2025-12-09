@@ -3095,6 +3095,11 @@ standardConfig static_configs[] = {
     createIntConfig("shutdown-timeout", NULL, MODIFIABLE_CONFIG, 0, INT_MAX, server.shutdown_timeout, 10, INTEGER_CONFIG, NULL, NULL),
     createIntConfig("repl-diskless-sync-max-replicas", NULL, MODIFIABLE_CONFIG, 0, INT_MAX, server.repl_diskless_sync_max_replicas, 0, INTEGER_CONFIG, NULL, NULL),
 
+    /* Rate Limiting Configs */
+    createIntConfig("rlimit-enabled", NULL, MODIFIABLE_CONFIG, 0, 1, server.rlimit_enabled, 0, INTEGER_CONFIG, NULL, NULL),
+    createIntConfig("rlimit-window-sec", NULL, MODIFIABLE_CONFIG, 1, 3600, server.rlimit_window_sec, 60, INTEGER_CONFIG, NULL, NULL),
+    createIntConfig("rlimit-max-requests", NULL, MODIFIABLE_CONFIG, 1, 1000000, server.rlimit_max_requests, 100, INTEGER_CONFIG, NULL, NULL),
+
     /* Unsigned int configs */
     createUIntConfig("maxclients", NULL, MODIFIABLE_CONFIG, 1, UINT_MAX, server.maxclients, 10000, INTEGER_CONFIG, NULL, updateMaxclients),
     createUIntConfig("unixsocketperm", NULL, IMMUTABLE_CONFIG, 0, 0777, server.unixsocketperm, 0, OCTAL_CONFIG, NULL, NULL),
