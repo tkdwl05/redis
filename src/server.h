@@ -1816,15 +1816,19 @@ struct redisServer {
     unsigned int maxclients;            /* Max number of simultaneous clients */
     unsigned long long maxmemory;   /* Max number of memory bytes to use */
     ssize_t maxmemory_clients;       /* Memory limit for total client buffers */
-    int maxmemory_policy;           /* Policy for key eviction */
-    int maxmemory_samples;          /* Precision of random sampling */
-    int maxmemory_eviction_tenacity;/* Aggressiveness of eviction processing */
-    int lfu_log_factor;             /* LFU logarithmic counter factor. */
-    int lfu_decay_time;             /* LFU counter decay factor. */
-    long long proto_max_bulk_len;   /* Protocol bulk length maximum size. */
-    int oom_score_adj_values[CONFIG_OOM_COUNT];   /* Linux oom_score_adj configuration */
-    int oom_score_adj;                            /* If true, oom_score_adj is managed */
-    int disable_thp;                              /* If true, disable THP by syscall */
+  int maxmemory_policy;            /* Policy for key eviction */
+  int maxmemory_samples;           /* Precision of random sampling */
+  int maxmemory_eviction_tenacity; /* Aggressiveness of eviction processing */
+  int lfu_log_factor;              /* LFU logarithmic counter factor. */
+  int lfu_decay_time;              /* LFU counter decay factor. */
+  long long proto_max_bulk_len;    /* Protocol bulk length maximum size. */
+  int rlimit_enabled;              /* Enable rate limiting per client */
+  int rlimit_window_sec;           /* Rate limit time window in seconds */
+  int rlimit_max_requests;         /* Max requests per window */
+  int oom_score_adj_values[CONFIG_OOM_COUNT]; /* Linux oom_score_adj
+                                                 configuration */
+  int oom_score_adj; /* If true, oom_score_adj is managed */
+  int disable_thp;   /* If true, disable THP by syscall */
     /* Blocked clients */
     unsigned int blocked_clients;   /* # of clients executing a blocking cmd.*/
     unsigned int blocked_clients_by_type[BLOCKED_NUM];
